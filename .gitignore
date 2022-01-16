@@ -1,0 +1,12 @@
+.gradle/
+logs/
+build/
+out/
+*.class
+ignore_*
+*.ignore
+*.key
+.idea/
+.eclipse/
+id_rsa_private
+id_rsa_public
