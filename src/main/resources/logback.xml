@@ -105,10 +105,10 @@
     <logger name="ui.MainFrame" level="WARN" additivity="false">
         <appender-ref ref="console"/>
     </logger>
-    <logger name="ui.ConnectDialog" level="TRACE" additivity="false">
+    <logger name="ui.ConnectDialog" level="WARN" additivity="false">
         <appender-ref ref="console"/>
     </logger>
-    <logger name="direct.ZookeeperTest" level="TRACE" additivity="false">
+    <logger name="direct.ZookeeperTest" level="WARN" additivity="false">
         <appender-ref ref="console"/>
     </logger>
     <logger name="org.apache.zookeeper.ZooKeeper" level="WARN"/>
