@@ -175,6 +175,7 @@ public class ConnectDialog extends JDialog {
                 if (!tryNext()) {
                     return;
                 }
+                freeze();
                 Integer port = Objects.requireNonNull(NumberHelper.parse2IntOrNull(portField.getText()));
                 String ip = ipField.getText();
 
@@ -251,6 +252,8 @@ public class ConnectDialog extends JDialog {
                     }
                     application.mainFrame.root = treeNode;
                     application.curatorFramework = curatorFramework;
+
+                    // 添加一个zk连接断开的监听器
                     curatorFramework.getConnectionStateListenable().addListener((client, state) -> {
                         application.mainFrame.logger.trace("zk state change to {}", state.toString());
                         boolean shouldShow = !state.isConnected();
@@ -266,12 +269,19 @@ public class ConnectDialog extends JDialog {
                             application.mainFrame.connectLoseDialog.setVisible(shouldShow);
                         });
                     }, application.executorService);
-                    // 添加一个zk连接断开的监听器
+
                     EventQueue.invokeLater(() -> {
                         jProgressBar.setIndeterminate(false);
                         application.mainFrame.jTree.setModel(new DefaultTreeModel(treeNode));
                         application.mainFrame.jTree.updateUI();
                         ConnectDialog.this.setVisible(false);
+                        final String newTitle = MessageFormat.format(
+                            "{0} - {1}:{2,number,#}",
+                            application.mainFrame.title,
+                            ip,
+                            port
+                        );
+                        application.mainFrame.setTitle(newTitle);
                         application.mainFrame.setVisible(true);
                     });
                 }, application.executorService);
@@ -334,7 +344,6 @@ public class ConnectDialog extends JDialog {
     }
 
     boolean checkPort() {
-        freeze();
         String value = portField.getText();
 
         final Integer port = NumberHelper.parse2IntOrNull(value);
