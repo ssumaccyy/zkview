@@ -1,5 +1,6 @@
 package ui;
 
+import dao.FastButtonCfg;
 import dao.TreeNode;
 import manager.Application;
 import manager.Environment;
@@ -8,6 +9,7 @@ import org.apache.curator.framework.CuratorFrameworkFactory;
 import org.apache.curator.retry.RetryForever;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import util.FastConnectHelper;
 import util.IconHelper;
 import util.NumberHelper;
 
@@ -51,7 +53,7 @@ public class ConnectDialog extends JDialog {
 
     java.util.LinkedList<JComponent> touchComponents = new LinkedList<>();
 
-    java.util.LinkedList<FastButtonCfg> fastButton = new LinkedList<>();
+    java.util.List<FastButtonCfg> fastButton = FastConnectHelper.fetchFastButtonCfg();
 
     boolean block = false;
 
@@ -90,9 +92,6 @@ public class ConnectDialog extends JDialog {
         ));
 
         final int fastButtonStart = 2;
-        fastButton.add(new FastButtonCfg("192.168.189.215",12181));
-        fastButton.add(new FastButtonCfg("192.168.189.13",12181));
-        fastButton.add(new FastButtonCfg("10.106.1.1",2181));
         final int fastButtonEnd = fastButtonStart + fastButton.size();
 
         for(int i = 0; i < fastButton.size(); i++) {
@@ -130,8 +129,9 @@ public class ConnectDialog extends JDialog {
             freeze();
             String ip = ipField.getText();
             String portStr = portField.getText();
+            String connectString = MessageFormat.format("{0}:{1}", ip, portStr);
             CuratorFramework curatorFramework = CuratorFrameworkFactory.builder().connectString(
-                MessageFormat.format("{0}:{1}", ip, portStr)
+                connectString
             ).connectionTimeoutMs(3_000).sessionTimeoutMs(30_000).retryPolicy(new RetryForever(3000)).build();
             jProgressBar.setIndeterminate(true);
             CompletableFuture.supplyAsync(
@@ -151,6 +151,7 @@ public class ConnectDialog extends JDialog {
                         jProgressBar.setIndeterminate(false);
                         if (connected != null) {
                             if (connected) {
+                                FastConnectHelper.writeToTmpFile(connectString);
                                 EventQueue.invokeLater(() -> JOptionPane.showMessageDialog(this, "连接成功", "ZkView - ConnectTest", JOptionPane.INFORMATION_MESSAGE));
                             } else {
                                 EventQueue.invokeLater(() -> JOptionPane.showMessageDialog(this, "连接失败", "ZkView - ConnectTest", JOptionPane.WARNING_MESSAGE));
@@ -354,24 +355,4 @@ public class ConnectDialog extends JDialog {
     }
 }
 
-class FastButtonCfg {
-    final String host;
-    final Integer port;
 
-    public FastButtonCfg(String host, Integer port) {
-        this.host = Objects.requireNonNull(host);
-        this.port = Objects.requireNonNull(port);
-    }
-
-    public FastButtonCfg() {
-        this("127.0.0.1", 2181);
-    }
-
-    public String getHost() {
-        return host;
-    }
-
-    public Integer getPort() {
-        return port;
-    }
-}
