@@ -14,7 +14,6 @@ jdk11
 ## 运行
 执行命令 `java -jar zkview-1.0.0.2.jar` 或者 `java -cp ./zkview-1.0.0.2.jar manager.Application`
 > 由于绑定了可视化界面，仅支持桌面系统使用
->
 
 ## 安全
 禁止在节点 `/` 上执行删除操作  
