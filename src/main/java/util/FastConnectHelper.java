@@ -18,10 +18,10 @@ public class FastConnectHelper {
       fastButtonCfgList.add(new FastButtonCfg("10.106.1.1", 12181));
     }
     if (fastButtonCfgList.size() == 1) {
-      fastButtonCfgList.add(new FastButtonCfg("192.168.189.215", 12181));
+      fastButtonCfgList.add(new FastButtonCfg("10.106.1.1", 22181));
     }
     if (fastButtonCfgList.size() == 2) {
-      fastButtonCfgList.add(new FastButtonCfg("192.168.189.13", 12181));
+      fastButtonCfgList.add(new FastButtonCfg("10.106.1.1", 32181));
     }
 
     return fastButtonCfgList;
