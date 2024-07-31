@@ -17,4 +17,8 @@ jdk11
 
 ## 安全
 禁止在节点 `/` 上执行删除操作  
-禁止在节点 `/zookeeper` 下新增、删除、修改节点  
+禁止在节点 `/zookeeper` 下新增、删除、修改节点
+
+
+## Git Tag
+git push 默认不会推送标签，本地打完标签后应当手动执行命令 `git push origin <tag-name>`，如果有多个新标签需要全部推送执行`git push origin --tags`
