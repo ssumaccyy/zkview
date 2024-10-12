@@ -85,8 +85,8 @@ public class Application {
 
     private void show() {
         // this.mainFrame.setVisible(true);
-        this.connectDialog.setVisible(true);
         this.connectDialog.setAlwaysOnTop(true);
+        this.connectDialog.setVisible(true);
     }
 
     static {
