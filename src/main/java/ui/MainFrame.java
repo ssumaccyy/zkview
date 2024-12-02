@@ -4,6 +4,7 @@ import cn.hutool.json.JSONArray;
 import cn.hutool.json.JSONConfig;
 import cn.hutool.json.JSONObject;
 import dao.TreeNode;
+import dao.ZkNodePack;
 import manager.Application;
 import org.apache.curator.framework.CuratorFramework;
 import org.apache.curator.framework.imps.CuratorFrameworkState;
@@ -20,6 +21,10 @@ import java.awt.*;
 import java.io.*;
 import java.nio.charset.Charset;
 import java.nio.charset.StandardCharsets;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.List;
 import java.util.Queue;
 import java.util.*;
@@ -46,6 +51,7 @@ public class MainFrame extends JFrame {
     JTextField nodePathTextField;
 
     JTextArea nodeContent;
+    JTextArea nodeState;
 
     public ConnectLoseDialog connectLoseDialog;
 
@@ -93,6 +99,7 @@ public class MainFrame extends JFrame {
             if (lastPath instanceof TreeNode) {
                 final String selectPath = ((TreeNode) lastPath).getPathNotNull();
                 nodePathTextField.setText(selectPath);
+                nodeState.setText("");
                 logger.trace("jTree new Select Path: {}", selectPath);
             } else {
                 logger.warn("jTree produce unexpected type tree path {}", lastPath.getClass().getCanonicalName());
@@ -167,13 +174,33 @@ public class MainFrame extends JFrame {
         nodeContent.setEditable(true);
         right.add(jScrollPane, gridBagConstraintsForTextFieldNodeContent);
 
+        GridBagConstraints gridBagConstraintsForTextFieldNodeStat = new GridBagConstraints(
+            0,
+            3,
+            GridBagConstraints.REMAINDER,
+            2,
+            0,
+            0.1,
+            GridBagConstraints.SOUTHWEST,
+            GridBagConstraints.BOTH,
+            new Insets(1, 2, 1, 2),
+            0,
+            0
+        );
+
+        nodeState = new JTextArea();
+        JScrollPane jScrollPane2 = new JScrollPane(nodeState, ScrollPaneConstants.VERTICAL_SCROLLBAR_AS_NEEDED, ScrollPaneConstants.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+        nodeState.setLineWrap(false);
+        nodeState.setEditable(false);
+        right.add(jScrollPane2, gridBagConstraintsForTextFieldNodeStat);
+
         final List<Map.Entry<JButton, ButtonCmd>> keySet = new LinkedList<>(btnMap.entrySet());
         final int keySetSize = keySet.size();
         for (int i = 0; i < keySetSize; i++) {
             Map.Entry<JButton, ButtonCmd> entry = keySet.get(i);
             GridBagConstraints gridBagConstraintsForBtn = new GridBagConstraints(
                 i,
-                3,
+                5,
                 1,
                 1,
                 0.4,
@@ -190,7 +217,7 @@ public class MainFrame extends JFrame {
         right.add(
             jProgressBar,
             new GridBagConstraints(
-                0, 4, keySetSize, 1, 0, 0, GridBagConstraints.SOUTHWEST, GridBagConstraints.HORIZONTAL, new Insets(1, 1, 1, 1), 0, 0
+                0, 6, keySetSize, 1, 0, 0, GridBagConstraints.SOUTHWEST, GridBagConstraints.HORIZONTAL, new Insets(1, 1, 1, 1), 0, 0
             )
         );
 
@@ -344,26 +371,40 @@ public class MainFrame extends JFrame {
                 if (stat == null) {
                     return null;
                 }
-                return curatorFramework.getData().forPath(path);
+                return new ZkNodePack(stat, curatorFramework.getData().forPath(path));
             } catch (Exception e) {
                 throw new RuntimeException(e);
             }
 
         }, application.executorService).thenApplyAsync(
-            (data) -> {
+            (pack) -> {
+                byte[] data = pack.data;
                 if (data == null) {
                     EventQueue.invokeLater(() -> JOptionPane.showMessageDialog(this, "节点不存在", "ZkView", JOptionPane.WARNING_MESSAGE));
                 }
-                return Optional.ofNullable(data);
+                return pack;
             }, application.executorService
-        ).whenCompleteAsync((optionalBytes, exception) -> {
-            if (optionalBytes.isEmpty()) {
-                return;
-            }
-            byte[] bytes = optionalBytes.get();
-            String string = new String(bytes, charset);
+        ).whenCompleteAsync((pack, exception) -> {
+            var optionalBytes = pack.data;
+            String nodeContentText = new String(optionalBytes, charset);
+            var stat = pack.stat;
+            var nodeStatText = String.format(
+                "节点创建事务Id: %d\n节点最后更新事务Id:%d\n节点创建时间：%s\n节点最后修改时间：%s\n节点数据长度：%d\n子节点数量：%d\n节点数据版本号：%d\n节点子节点版本号：%d\n" +
+                    "节点子节点配置版本号：%d\n节点临时会话Id：%d",
+                stat.getCzxid(),
+                stat.getMzxid(),
+                DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(stat.getCtime()), ZoneId.systemDefault())),
+                DateTimeFormatter.ISO_LOCAL_DATE_TIME.format(LocalDateTime.ofInstant(Instant.ofEpochMilli(stat.getMtime()), ZoneId.systemDefault())),
+                stat.getDataLength(),
+                stat.getNumChildren(),
+                stat.getVersion(),
+                stat.getAversion(),
+                stat.getCversion(),
+                stat.getEphemeralOwner()
+            );
             EventQueue.invokeLater(() -> {
-                nodeContent.setText(string);
+                nodeContent.setText(nodeContentText);
+                nodeState.setText(nodeStatText);
                 jProgressBar.setValue(100);
             });
             application.scheduledExecutorService.schedule(() -> EventQueue.invokeLater(() -> jProgressBar.setValue(0)), 500, TimeUnit.MILLISECONDS);
@@ -595,6 +636,7 @@ public class MainFrame extends JFrame {
                 jTree.clearSelection();
                 nodePathTextField.setText("");
                 nodeContent.setText("");
+                nodeState.setText("");
             });
             if (exception != null) {
                 logger.error("重载全部节点发生异常", exception);
@@ -689,10 +731,10 @@ public class MainFrame extends JFrame {
 
     protected void actForBtnClear() {
         nodeContent.setText("");
+        nodeState.setText("");
     }
 
     void stop() {
         application.stop();
     }
 }
-
