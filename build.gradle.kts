@@ -8,11 +8,12 @@ plugins {
     `java-library`
     java
     distribution
-    kotlin("jvm") version "1.5.31" apply false
+    kotlin("jvm") version("2.3.0-RC3") // 搜索地址 https://plugins.gradle.org/search?term=kotlin
+    // id("org.jetbrains.kotlin.jvm") version "2.3.0-RC3"
 }
 
 group = "example.domain"
-version = "1.0.0.4"
+version = "1.0.0.5"
 
 
 allprojects {
@@ -67,7 +68,7 @@ allprojects {
     apply(plugin = "java")
     tasks.compileJava {
         options.javaModuleVersion.set(provider { project.version as String })
-        options.release.set(11)
+        options.release.set(17)
         options.encoding = "UTF-8"
     }
 }

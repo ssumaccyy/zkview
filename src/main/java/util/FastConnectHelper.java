@@ -5,7 +5,6 @@ import dao.FastButtonCfg;
 import java.io.*;
 import java.nio.charset.StandardCharsets;
 import java.util.*;
-import java.util.stream.Collectors;
 
 public class FastConnectHelper {
   public static final String UUID_TMP_FILE_FAST_BUTTON = "A8E4F7C4-9E2C-4C11-9A4C-8E0F4F4F4F4F";
@@ -18,10 +17,10 @@ public class FastConnectHelper {
       fastButtonCfgList.add(new FastButtonCfg("10.106.1.1", 12181));
     }
     if (fastButtonCfgList.size() == 1) {
-      fastButtonCfgList.add(new FastButtonCfg("192.168.189.215", 12181));
+      fastButtonCfgList.add(new FastButtonCfg("10.106.1.1", 22181));
     }
     if (fastButtonCfgList.size() == 2) {
-      fastButtonCfgList.add(new FastButtonCfg("192.168.189.13", 12181));
+      fastButtonCfgList.add(new FastButtonCfg("10.106.1.1", 32181));
     }
 
     return fastButtonCfgList;
@@ -53,7 +52,7 @@ public class FastConnectHelper {
     LinkedList<FastButtonCfg> cfgList = new LinkedList<>();
     try {
       BufferedReader br = new BufferedReader(new FileReader(tmpFile));
-      var readLines = new ArrayList<>(br.lines().collect(Collectors.toUnmodifiableList())); // 读出来的所有行，可能有重复
+      var readLines = new ArrayList<>(br.lines().toList()); // 读出来的所有行，可能有重复
       var noRepeatSet = new LinkedHashSet<>(readLines); // 去重之后的行
       br.close();
       var arrayList = new ArrayList<>(noRepeatSet);
@@ -71,7 +70,7 @@ public class FastConnectHelper {
 
       var toWrite = new ArrayList<String>(sArray.length);
       for (String s : sArray) {
-        if (s.isEmpty() || s.isBlank()) {
+        if (s.isBlank()) {
           continue;
         }
         String[] sArray2 = s.split(":");
