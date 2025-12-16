@@ -110,6 +110,7 @@ tasks {
 }
 
 tasks.register<Jar>("fatJar") {
+    group = "custom"
     archiveBaseName.set("zkview")
     destinationDirectory.set(File("build"))
     from(sourceSets.main.get().output)
