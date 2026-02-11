@@ -445,6 +445,10 @@ public class MainFrame extends JFrame {
             newNodePath = "/" + nodeName;
         }
         final String finalNodePath = newNodePath;
+        int option = JOptionPane.showConfirmDialog(this, "确认创建以下节点？\n" + finalNodePath, "操作确认", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.CANCEL_OPTION) {
+            return;
+        }
         if (Application.blackPath.stream().anyMatch(finalNodePath::startsWith)) {
             JOptionPane.showMessageDialog(this, "不支持修改安全目录", "ZkView", JOptionPane.ERROR_MESSAGE);
             return;
@@ -502,6 +506,10 @@ public class MainFrame extends JFrame {
         TreeNode parent = selectNode.getParent();
         int selectRow = jTree.getMinSelectionRow();
         String nodePath = selectNode.getPathNotNull();
+        int option = JOptionPane.showConfirmDialog(this, "确认删除以下节点？\n" + nodePath, "操作确认", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.CANCEL_OPTION) {
+            return;
+        }
         if (nodePath.compareTo("/") == 0) {
             JOptionPane.showMessageDialog(this, "非法操作", "ZkView", JOptionPane.ERROR_MESSAGE);
             return;
@@ -679,6 +687,11 @@ public class MainFrame extends JFrame {
 
         TreeNode treeNode = (TreeNode) selectObj;
         String path = treeNode.getPathNotNull();
+        int option = JOptionPane.showConfirmDialog(this, "确认保存以下节点数据？\n" + path, "操作确认", JOptionPane.OK_CANCEL_OPTION);
+        if (option == JOptionPane.CANCEL_OPTION) {
+            return;
+        }
+
         final CuratorFramework curatorFramework = application.curatorFramework;
         if (curatorFramework == null || curatorFramework.getState() != CuratorFrameworkState.STARTED) {
             JOptionPane.showMessageDialog(this, "zookeeper没有准备好", "ZkView", JOptionPane.ERROR_MESSAGE);
